@@ -67,24 +67,6 @@ enum stack_protector_guard {
   SSP_GLOBAL			/* global canary */
 };
 
-/* The number of bits in a single vector register.  
-   FIXME: According to RVV ISA, the maximum of vlen is 65536 bits. 
-   However it will overflows for using GET_MODE_SIZE or GET_MODE_BITSIZE. 
-   We will support larger vlen in the future. */
-enum riscv_vector_bits_enum
-{
-  VLEN_SCALABLE,
-  VLEN_NOT_IMPLEMENTED = VLEN_SCALABLE,
-  VLEN_32 = 32,
-  VLEN_64 = 64,
-  VLEN_128 = 128,
-  VLEN_256 = 256,
-  VLEN_512 = 512,
-  VLEN_1024 = 1024,
-  VLEN_2048 = 2048,
-  VLEN_4096 = 4096
-};
-
 #define MASK_ZICSR    (1 << 0)
 #define MASK_ZIFENCEI (1 << 1)
 

@@ -5077,7 +5077,6 @@ riscv_init_machine_status (void)
   return ggc_cleared_alloc<machine_function> ();
 }
 
-
 /* Return the VLEN value associated with -march.  
    TODO: So far we only support length-agnostic value. */
 

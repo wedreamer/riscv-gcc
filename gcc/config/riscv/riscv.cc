@@ -5078,59 +5078,36 @@ riscv_init_machine_status (void)
 }
 
 
-/* Return the VLEN value associated with -mriscv-vector-bits= value VALUE.  */
+/* Return the VLEN value associated with -march.  
+   TODO: So far we only support length-agnostic value. */
 
 static poly_uint16
-riscv_convert_vector_bits (riscv_vector_bits_enum value)
+riscv_convert_vector_bits (void)
 {
   /* The runtime invariant is only meaningful when vector is enabled. */
   if (!TARGET_VECTOR)
     return 0;
 
-  /* Handle both length-agnostic and length-specific cases. */
-  if (value == VLEN_32)
-    {
-      /* We only allow -mriscv-vector-bits=32 when only Zve32* and Zvl32b are
-       * enabled. */
-      if (TARGET_VECTOR_ELEN_64 || TARGET_VECTOR_ELEN_FP_64)
-	error (
-	  "-mriscv-vector-bits specified is lower than the Zve64* limitation");
-      if (TARGET_ZVL64B || TARGET_ZVL128B || TARGET_ZVL256B || TARGET_ZVL512B
-	  || TARGET_ZVL1024B || TARGET_ZVL2048B || TARGET_ZVL4096B
-	  || TARGET_ZVL8192B || TARGET_ZVL16384B || TARGET_ZVL32768B
-	  || TARGET_ZVL65536B)
-	error (
-	  "-mriscv-vector-bits specified is lower than the Zvl*b limitation");
-    }
-
   if (TARGET_VECTOR_ELEN_64 || TARGET_VECTOR_ELEN_FP_64)
     {
       /* When targetting Zve64* (ELEN = 64) extensions, we should use 64-bit
-     chunk size.
-	 1. Runtime invariant: The single indeterminate represent the number of
-     64-bit chunks in a vector beyond minimum length of 64 bits. Thus the number
-     of bytes in a vector is 8 + 8 * x1 which is riscv_vector_chunks * 8 =
-     poly_int (8, 8).
-	 2. compile-time constant: The number of bytes should
-     riscv_vector_chunks * 8 = VALUE / 64 * 8. */
+     chunk size. Runtime invariant: The single indeterminate represent the
+     number of 64-bit chunks in a vector beyond minimum length of 64 bits. Thus
+     the number of bytes in a vector is 8 + 8 * x1 which is riscv_vector_chunks
+     * 8 = poly_int (8, 8). */
       riscv_bytes_per_vector_chunk = 8;
     }
   else
     {
       /* When targetting Zve32* (ELEN = 32) extensions, we should use 32-bit
-     chunk size.
-    1. Runtime invariant: The single indeterminate represent the number of
-     32-bit chunks in a vector beyond minimum length of 32 bits. Thus the number
-     of bytes in a vector is 4 + 4 * x1 which is riscv_vector_chunks * 4 =
-     poly_int (4, 4).
-	 2. compile-time constant: The number of bytes should
-     riscv_vector_chunks * 4 = VALUE / 32 * 8. */
+     chunk size. Runtime invariant: The single indeterminate represent the
+     number of 32-bit chunks in a vector beyond minimum length of 32 bits. Thus
+     the number of bytes in a vector is 4 + 4 * x1 which is riscv_vector_chunks
+     * 4 = poly_int (4, 4).  */
       riscv_bytes_per_vector_chunk = 4;
     }
-  if (value == VLEN_SCALABLE)
-    return poly_uint16 (1, 1);
-  else
-    return (int) value / (riscv_bytes_per_vector_chunk * 8);
+
+  return poly_uint16 (1, 1);
 }
 
 /* Implement TARGET_OPTION_OVERRIDE.  */
@@ -5279,8 +5256,8 @@ riscv_option_override (void)
       riscv_stack_protector_guard_offset = offs;
     }
 
-  /* Convert -mriscv-vector-bits to a chunks count.  */
-  riscv_vector_chunks = riscv_convert_vector_bits (riscv_vector_bits);
+  /* Convert -march to a chunks count.  */
+  riscv_vector_chunks = riscv_convert_vector_bits ();
 }
 
 /* Implement TARGET_CONDITIONAL_REGISTER_USAGE.  */

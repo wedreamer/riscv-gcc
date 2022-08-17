@@ -70,41 +70,6 @@ Enum(abi_type) String(lp64f) Value(ABI_LP64F)
 EnumValue
 Enum(abi_type) String(lp64d) Value(ABI_LP64D)
 
-Enum
-Name(riscv_vector_bits) Type(enum riscv_vector_bits_enum)
-The possible RVV vector lengths:
-
-EnumValue
-Enum(riscv_vector_bits) String(scalable) Value(VLEN_SCALABLE)
-
-EnumValue
-Enum(riscv_vector_bits) String(32) Value(VLEN_32)
-
-EnumValue
-Enum(riscv_vector_bits) String(64) Value(VLEN_64)
-
-EnumValue
-Enum(riscv_vector_bits) String(128) Value(VLEN_128)
-
-EnumValue
-Enum(riscv_vector_bits) String(256) Value(VLEN_256)
-
-EnumValue
-Enum(riscv_vector_bits) String(512) Value(VLEN_512)
-
-EnumValue
-Enum(riscv_vector_bits) String(1024) Value(VLEN_1024)
-
-EnumValue
-Enum(riscv_vector_bits) String(2048) Value(VLEN_2048)
-
-EnumValue
-Enum(riscv_vector_bits) String(4096) Value(VLEN_4096)
-
-mriscv-vector-bits=
-Target RejectNegative Joined Enum(riscv_vector_bits) Var(riscv_vector_bits) Init(VLEN_SCALABLE)
--mriscv-vector-bits=<number>	Set the number of bits in a single RVV vector register.
-
 mfdiv
 Target Mask(FDIV)
 Use hardware floating-point divide and square root instructions.

@@ -279,22 +279,7 @@ const enum reg_class riscv_regno_to_class[FIRST_PSEUDO_REGISTER] = {
   FP_REGS,	FP_REGS,	FP_REGS,	FP_REGS,
   FP_REGS,	FP_REGS,	FP_REGS,	FP_REGS,
   FP_REGS,	FP_REGS,	FP_REGS,	FP_REGS,
-  FRAME_REGS,	FRAME_REGS,	VL_REGS,	VTYPE_REGS,
-  NO_REGS,	NO_REGS,	NO_REGS,	NO_REGS,
-  NO_REGS,	NO_REGS,	NO_REGS,	NO_REGS,
-  NO_REGS,	NO_REGS,	NO_REGS,	NO_REGS,
-  NO_REGS,	NO_REGS,	NO_REGS,	NO_REGS,
-  NO_REGS,	NO_REGS,	NO_REGS,	NO_REGS,
-  NO_REGS,	NO_REGS,	NO_REGS,	NO_REGS,
-  NO_REGS,	NO_REGS,	NO_REGS,	NO_REGS,
-  VM_REGS,	VD_REGS,	VD_REGS,	VD_REGS,
-  VD_REGS,	VD_REGS,	VD_REGS,	VD_REGS,
-  VD_REGS,	VD_REGS,	VD_REGS,	VD_REGS,
-  VD_REGS,	VD_REGS,	VD_REGS,	VD_REGS,
-  VD_REGS,	VD_REGS,	VD_REGS,	VD_REGS,
-  VD_REGS,	VD_REGS,	VD_REGS,	VD_REGS,
-  VD_REGS,	VD_REGS,	VD_REGS,	VD_REGS,
-  VD_REGS,	VD_REGS,	VD_REGS,	VD_REGS,
+  FRAME_REGS,	FRAME_REGS,
 };
 
 /* Costs to use when optimizing for rocket.  */
@@ -447,7 +432,7 @@ riscv_build_integer_1 (struct riscv_integer_op codes[RISCV_MAX_INTEGER_OPS],
 	 sign-extended (negative) representation (-1 << 31) for the
 	 value, if we want to build (1 << 31) in SImode.  This will
 	 then expand to an LUI instruction.  */
-      if (mode == SImode && value == (HOST_WIDE_INT_1U << 31))
+      if (TARGET_64BIT && mode == SImode && value == (HOST_WIDE_INT_1U << 31))
 	codes[0].value = (HOST_WIDE_INT_M1U << 31);
 
       return 1;
@@ -460,7 +445,11 @@ riscv_build_integer_1 (struct riscv_integer_op codes[RISCV_MAX_INTEGER_OPS],
       && (mode != HImode
 	  || value - low_part <= ((1 << (GET_MODE_BITSIZE (HImode) - 1)) - 1)))
     {
-      alt_cost = 1 + riscv_build_integer_1 (alt_codes, value - low_part, mode);
+      HOST_WIDE_INT upper_part = value - low_part;
+      if (mode != VOIDmode)
+	upper_part = trunc_int_for_mode (value - low_part, mode);
+
+      alt_cost = 1 + riscv_build_integer_1 (alt_codes, upper_part, mode);
       if (alt_cost < cost)
 	{
 	  alt_codes[alt_cost-1].code = PLUS;
@@ -1565,6 +1554,7 @@ riscv_move_integer (rtx temp, rtx dest, HOST_WIDE_INT value,
     x = riscv_split_integer (value, mode);
   else
     {
+      codes[0].value = trunc_int_for_mode (codes[0].value, mode);
       /* Apply each binary operation to X. */
       x = GEN_INT (codes[0].value);
 
@@ -1574,7 +1564,7 @@ riscv_move_integer (rtx temp, rtx dest, HOST_WIDE_INT value,
 	    x = riscv_emit_set (temp, x);
 	  else
 	    x = force_reg (mode, x);
-
+	  codes[i].value = trunc_int_for_mode (codes[i].value, mode);
 	  x = gen_rtx_fmt_ee (codes[i].code, mode, x, GEN_INT (codes[i].value));
 	}
     }
@@ -2666,6 +2656,7 @@ riscv_emit_int_compare (enum rtx_code *code, rtx *op0, rtx *op1)
 		continue;
 
 	      new_rhs = rhs + (increment ? 1 : -1);
+	      new_rhs = trunc_int_for_mode (new_rhs, GET_MODE (*op0));
 	      if (riscv_integer_cost (new_rhs) < riscv_integer_cost (rhs)
 		  && (rhs < 0) == (new_rhs < 0))
 		{
@@ -3745,11 +3736,23 @@ riscv_memmodel_needs_release_fence (enum memmodel model)
    'z'	Print x0 if OP is zero, otherwise print OP normally.
    'i'	Print i if the operand is not a register.
    'S'	Print shift-index of single-bit mask OP.
-   'T'	Print shift-index of inverted single-bit mask OP.  */
+   'T'	Print shift-index of inverted single-bit mask OP.
+   '~'	Print w if TARGET_64BIT is true; otherwise not print anything.
+
+   Note please keep this list and the list in riscv.md in sync.  */
 
 static void
 riscv_print_operand (FILE *file, rtx op, int letter)
 {
+  /* `~` does not take an operand so op will be null
+     Check for before accessing op.
+  */
+  if (letter == '~')
+    {
+      if (TARGET_64BIT)
+	fputc('w', file);
+      return;
+    }
   machine_mode mode = GET_MODE (op);
   enum rtx_code code = GET_CODE (op);
 
@@ -3823,6 +3826,13 @@ riscv_print_operand (FILE *file, rtx op, int letter)
 	  break;
 	}
     }
+}
+
+/* Implement TARGET_PRINT_OPERAND_PUNCT_VALID_P */
+static bool
+riscv_print_operand_punct_valid_p (unsigned char code)
+{
+  return (code == '~');
 }
 
 /* Implement TARGET_PRINT_OPERAND_ADDRESS.  */
@@ -5092,9 +5102,8 @@ riscv_init_machine_status (void)
   return ggc_cleared_alloc<machine_function> ();
 }
 
-/* Return the VLEN value associated with -march.  
+/* Return the VLEN value associated with -march.
    TODO: So far we only support length-agnostic value. */
-
 static poly_uint16
 riscv_convert_vector_bits (void)
 {
@@ -5105,19 +5114,19 @@ riscv_convert_vector_bits (void)
   if (TARGET_VECTOR_ELEN_64 || TARGET_VECTOR_ELEN_FP_64)
     {
       /* When targetting Zve64* (ELEN = 64) extensions, we should use 64-bit
-     chunk size. Runtime invariant: The single indeterminate represent the
-     number of 64-bit chunks in a vector beyond minimum length of 64 bits. Thus
-     the number of bytes in a vector is 8 + 8 * x1 which is riscv_vector_chunks
-     * 8 = poly_int (8, 8). */
+	 chunk size. Runtime invariant: The single indeterminate represent the
+	 number of 64-bit chunks in a vector beyond minimum length of 64 bits.
+	 Thus the number of bytes in a vector is 8 + 8 * x1 which is
+	 riscv_vector_chunks * 8 = poly_int (8, 8). */
       riscv_bytes_per_vector_chunk = 8;
     }
   else
     {
       /* When targetting Zve32* (ELEN = 32) extensions, we should use 32-bit
-     chunk size. Runtime invariant: The single indeterminate represent the
-     number of 32-bit chunks in a vector beyond minimum length of 32 bits. Thus
-     the number of bytes in a vector is 4 + 4 * x1 which is riscv_vector_chunks
-     * 4 = poly_int (4, 4).  */
+	 chunk size. Runtime invariant: The single indeterminate represent the
+	 number of 32-bit chunks in a vector beyond minimum length of 32 bits.
+	 Thus the number of bytes in a vector is 4 + 4 * x1 which is
+	 riscv_vector_chunks * 4 = poly_int (4, 4).  */
       riscv_bytes_per_vector_chunk = 4;
     }
 
@@ -5914,6 +5923,8 @@ riscv_init_libfuncs (void)
 #define TARGET_PRINT_OPERAND riscv_print_operand
 #undef TARGET_PRINT_OPERAND_ADDRESS
 #define TARGET_PRINT_OPERAND_ADDRESS riscv_print_operand_address
+#undef TARGET_PRINT_OPERAND_PUNCT_VALID_P
+#define TARGET_PRINT_OPERAND_PUNCT_VALID_P riscv_print_operand_punct_valid_p
 
 #undef TARGET_SETUP_INCOMING_VARARGS
 #define TARGET_SETUP_INCOMING_VARARGS riscv_setup_incoming_varargs

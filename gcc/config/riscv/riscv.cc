@@ -930,8 +930,7 @@ riscv_valid_lo_sum_p (enum riscv_symbol_type sym_type, machine_mode mode,
 static bool
 riscv_v_ext_vector_mode_p (machine_mode mode)
 {
-  /* The name of RVV modes should have a prefix "VNx".  */
-  return VECTOR_MODE_P (mode) && strncmp (GET_MODE_NAME (mode), "VNx", 3) == 0;
+  return VECTOR_MODE_P (mode);
 }
 
 /* Return true if X is a valid address for machine mode MODE.  If it is,

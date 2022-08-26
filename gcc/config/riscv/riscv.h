@@ -122,8 +122,13 @@ ASM_MISA_SPEC
 #define DWARF_CIE_DATA_ALIGNMENT -4
 
 /* The mapping from gcc register number to DWARF 2 CFA column number.  */
-#define DWARF_FRAME_REGNUM(REGNO) \
-  (GP_REG_P (REGNO) || FP_REG_P (REGNO) || V_REG_P (REGNO) ? REGNO : INVALID_REGNUM)
+#define DWARF_FRAME_REGNUM(REGNO)                                              \
+  (VL_REG_P (REGNO) ? RISCV_DWARF_VL                                           \
+   : VTYPE_REG_P (REGNO)                                                       \
+     ? RISCV_DWARF_VTYPE                                                       \
+     : (GP_REG_P (REGNO) || FP_REG_P (REGNO) || V_REG_P (REGNO)                \
+	  ? REGNO                                                              \
+	  : INVALID_REGNUM))
 
 /* The DWARF 2 CFA column which tracks the return address.  */
 #define DWARF_FRAME_RETURN_COLUMN RETURN_ADDR_REGNUM
@@ -367,7 +372,9 @@ ASM_MISA_SPEC
   ((unsigned int) ((int) (REGNO) - FP_REG_FIRST) < FP_REG_NUM)
 #define V_REG_P(REGNO)  \
   ((unsigned int) ((int) (REGNO) - V_REG_FIRST) < V_REG_NUM)
-
+#define VL_REG_P(REGNO) ((REGNO) == VL_REGNUM)
+#define VTYPE_REG_P(REGNO) ((REGNO) == VTYPE_REGNUM)
+  
 /* True when REGNO is in SIBCALL_REGS set.  */
 #define SIBCALL_REG_P(REGNO)	\
   TEST_HARD_REG_BIT (reg_class_contents[SIBCALL_REGS], REGNO)
@@ -383,6 +390,10 @@ ASM_MISA_SPEC
    the stack or hard frame pointer.  */
 #define ARG_POINTER_REGNUM 64
 #define FRAME_POINTER_REGNUM 65
+
+/* Define Dwarf for RVV.  */
+#define RISCV_DWARF_VL (4096 + 0xc20)
+#define RISCV_DWARF_VTYPE (4096 + 0xc21)
 
 /* Register in which static-chain is passed to a function.  */
 #define STATIC_CHAIN_REGNUM (GP_TEMP_FIRST + 2)

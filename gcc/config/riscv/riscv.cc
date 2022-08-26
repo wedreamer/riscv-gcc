@@ -925,6 +925,15 @@ riscv_valid_lo_sum_p (enum riscv_symbol_type sym_type, machine_mode mode,
   return true;
 }
 
+/* Return true if mode is the RVV mode.  */
+
+static bool
+riscv_v_ext_vector_mode_p (machine_mode mode)
+{
+  /* The name of RVV modes should have a prefix "VNx".  */
+  return VECTOR_MODE_P (mode) && strncmp (GET_MODE_NAME (mode), "VNx", 3) == 0;
+}
+
 /* Return true if X is a valid address for machine mode MODE.  If it is,
    fill in INFO appropriately.  STRICT_P is true if REG_OK_STRICT is in
    effect.  */
@@ -944,7 +953,7 @@ riscv_classify_address (struct riscv_address_info *info, rtx x,
 
     case PLUS:
       /* RVV load/store disallow any offset.  */
-      if (VECTOR_MODE_P (mode))
+      if (riscv_v_ext_vector_mode_p (mode))
 	return false;
 
       info->type = ADDRESS_REG;
@@ -955,7 +964,7 @@ riscv_classify_address (struct riscv_address_info *info, rtx x,
 
     case LO_SUM:
       /* RVV load/store disallow LO_SUM.  */
-      if (VECTOR_MODE_P (mode))
+      if (riscv_v_ext_vector_mode_p (mode))
 	return false;
 
       info->type = ADDRESS_LO_SUM;
@@ -977,7 +986,7 @@ riscv_classify_address (struct riscv_address_info *info, rtx x,
 
     case CONST_INT:
       /* RVV load/store disallow CONST_INT.  */
-      if (VECTOR_MODE_P (mode))
+      if (riscv_v_ext_vector_mode_p (mode))
 	return false;
 
       /* Small-integer addresses don't occur very often, but they
@@ -1065,7 +1074,7 @@ riscv_address_insns (rtx x, machine_mode mode, bool might_split_p)
 
   /* BLKmode is used for single unaligned loads and stores and should
      not count as a multiword mode. */
-  if (!VECTOR_MODE_P (mode) && mode != BLKmode && might_split_p)
+  if (!riscv_v_ext_vector_mode_p (mode) && mode != BLKmode && might_split_p)
     n += (GET_MODE_SIZE (mode).to_constant () + UNITS_PER_WORD - 1) / UNITS_PER_WORD;
 
   if (addr.type == ADDRESS_LO_SUM)
@@ -1802,7 +1811,7 @@ riscv_immediate_operand_p (int code, HOST_WIDE_INT x)
 static int
 riscv_binary_cost (rtx x, int single_insns, int double_insns)
 {
-  if (!VECTOR_MODE_P (GET_MODE (x))
+  if (!riscv_v_ext_vector_mode_p (GET_MODE (x))
       && GET_MODE_SIZE (GET_MODE (x)).to_constant () == UNITS_PER_WORD * 2)
     return COSTS_N_INSNS (double_insns);
   return COSTS_N_INSNS (single_insns);
@@ -1852,7 +1861,7 @@ riscv_rtx_costs (rtx x, machine_mode mode, int outer_code, int opno ATTRIBUTE_UN
 {
   /* TODO:We set RVV instruction cost as 1 by default.
      Cost Model need to be well analyzed and supported in the future. */
-  if (VECTOR_MODE_P (mode))
+  if (riscv_v_ext_vector_mode_p (mode))
     {
       *total = COSTS_N_INSNS (1);
       return true;
@@ -4921,7 +4930,7 @@ static bool
 riscv_secondary_memory_needed (machine_mode mode, reg_class_t class1,
 			       reg_class_t class2)
 {
-  return (!VECTOR_MODE_P (mode)
+  return (!riscv_v_ext_vector_mode_p (mode)
 	  && GET_MODE_SIZE (mode).to_constant () > UNITS_PER_WORD
 	  && (class1 == FP_REGS) != (class2 == FP_REGS));
 }
@@ -4944,7 +4953,7 @@ riscv_register_move_cost (machine_mode mode,
 static unsigned int
 riscv_hard_regno_nregs (unsigned int regno, machine_mode mode)
 {
-  if (VECTOR_MODE_P (mode))
+  if (riscv_v_ext_vector_mode_p (mode))
     {
       /* Handle fractional LMUL, it only occupy part of vector register but
 	 still need one vector register to hold.  */
@@ -4979,7 +4988,7 @@ riscv_hard_regno_mode_ok (unsigned int regno, machine_mode mode)
 
   if (GP_REG_P (regno))
     {
-      if (VECTOR_MODE_P (mode))
+      if (riscv_v_ext_vector_mode_p (mode))
 	return false;
 
       if (!GP_REG_P (regno + nregs - 1))
@@ -4987,7 +4996,7 @@ riscv_hard_regno_mode_ok (unsigned int regno, machine_mode mode)
     }
   else if (FP_REG_P (regno))
     {
-      if (VECTOR_MODE_P (mode))
+      if (riscv_v_ext_vector_mode_p (mode))
 	return false;
 
       if (!FP_REG_P (regno + nregs - 1))
@@ -5006,7 +5015,7 @@ riscv_hard_regno_mode_ok (unsigned int regno, machine_mode mode)
     }
   else if (V_REG_P (regno))
     {
-      if (!VECTOR_MODE_P (mode))
+      if (!riscv_v_ext_vector_mode_p (mode))
 	return false;
 
       /* 3.3.2. LMUL = 2,4,8, register numbers should be multiple of 2,4,8.

@@ -57,16 +57,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "predict.h"
 #include "tree-pass.h"
 #include "opts.h"
-#include "langhooks.h"
-#include "rtl-iter.h"
-#include "gimple.h"
-#include "cfghooks.h"
-#include "cfgloop.h"
-#include "fold-const.h"
-#include "gimple-iterator.h"
-#include "tree-vectorizer.h"
-#include "tree-ssa-loop-niter.h"
-#include "rtx-vector-builder.h"
 
 /* True if X is an UNSPEC wrapper around a SYMBOL_REF or LABEL_REF.  */
 #define UNSPEC_ADDRESS_P(X)					\

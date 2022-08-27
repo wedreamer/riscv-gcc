@@ -207,10 +207,10 @@
 ;; vstm        vector unit-stride mask store instructions
 ;; vlds        vector strided load instructions
 ;; vsts        vector strided store instructions
-;; vldux       vector unordered indexed load instructions 
-;; vldox       vector ordered indexed load instructions   
-;; vstux       vector unordered indexed store instructions 
-;; vstox       vector ordered indexed store instructions   
+;; vldux       vector unordered indexed load instructions
+;; vldox       vector ordered indexed load instructions
+;; vstux       vector unordered indexed store instructions
+;; vstox       vector ordered indexed store instructions
 ;; vldff       vector unit-stride fault-only-first load instructions
 ;; vldr        vector whole register load instructions
 ;; vstr        vector whole register store instructions

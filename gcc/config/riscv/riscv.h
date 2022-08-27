@@ -296,8 +296,8 @@ ASM_MISA_SPEC
    - 32 floating point registers
    - 2 fake registers:
 	- ARG_POINTER_REGNUM
-	- FRAME_POINTER_REGNUM 
-   - 1 vl register 
+	- FRAME_POINTER_REGNUM
+   - 1 vl register
    - 1 vtype register
    - 30 unused registers for future expansion
    - 32 vector registers  */
@@ -374,7 +374,7 @@ ASM_MISA_SPEC
   ((unsigned int) ((int) (REGNO) - V_REG_FIRST) < V_REG_NUM)
 #define VL_REG_P(REGNO) ((REGNO) == VL_REGNUM)
 #define VTYPE_REG_P(REGNO) ((REGNO) == VTYPE_REGNUM)
-  
+
 /* True when REGNO is in SIBCALL_REGS set.  */
 #define SIBCALL_REG_P(REGNO)	\
   TEST_HARD_REG_BIT (reg_class_contents[SIBCALL_REGS], REGNO)

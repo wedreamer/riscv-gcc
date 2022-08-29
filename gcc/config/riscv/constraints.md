@@ -121,7 +121,7 @@
   "A vector mask register (if available).")
 
 ;; This constraint is used to match instruction "csrr %0, vlenb" which is generated in "mov<mode>".
-;; VLENB is a design-time constant which represent the vector register length in bytes.
+;; VLENB is a run-time constant which represent the vector register length in bytes.
 ;; BYTES_PER_RISCV_VECTOR represent runtime invariant of vector register length in bytes.
 ;; We should only allow the poly equal to BYTES_PER_RISCV_VECTOR.
 (define_constraint "vp"

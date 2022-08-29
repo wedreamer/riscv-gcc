@@ -5232,8 +5232,8 @@ riscv_init_machine_status (void)
 static poly_uint16
 riscv_convert_vector_bits (void)
 {
-  /* The runtime invariant is only meaningful when vector is enabled and minimum VLEN >= 32. */
-  if (!TARGET_VECTOR || TARGET_MIN_VLEN < 32)
+  /* The runtime invariant is only meaningful when TARGET_VECTOR is enabled. */
+  if (!TARGET_VECTOR)
     return 0;
 
   if (TARGET_MIN_VLEN > 32)

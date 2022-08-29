@@ -148,7 +148,7 @@
 ;; scheduling type to be "multi" instead.
 (define_attr "move_type"
   "unknown,load,fpload,store,fpstore,mtc,mfc,move,fmove,
-   const,logical,arith,andi,shift_shift"
+   const,logical,arith,andi,shift_shift,rdvlenb"
   (const_string "unknown"))
 
 ;; Main data type used by the insn
@@ -326,7 +326,8 @@
 	      (eq_attr "dword_mode" "yes"))
 	   (const_string "multi")
 	 (eq_attr "move_type" "move") (const_string "move")
-	 (eq_attr "move_type" "const") (const_string "const")]
+	 (eq_attr "move_type" "const") (const_string "const")
+	 (eq_attr "move_type" "rdvlenb") (const_string "rdvlenb")]
 	(const_string "unknown")))
 
 ;; Length of instruction in bytes.
@@ -1633,23 +1634,23 @@
 })
 
 (define_insn "*movdi_32bit"
-  [(set (match_operand:DI 0 "nonimmediate_operand" "=r,r,r,m,  *f,*f,*r,*f,*m")
-	(match_operand:DI 1 "move_operand"         " r,i,m,r,*J*r,*m,*f,*f,*f"))]
+  [(set (match_operand:DI 0 "nonimmediate_operand" "=r,r,r,r,m,  *f,*f,*r,*f,*m")
+	(match_operand:DI 1 "move_operand"         " vp,r,i,m,r,*J*r,*m,*f,*f,*f"))]
   "!TARGET_64BIT
    && (register_operand (operands[0], DImode)
        || reg_or_0_operand (operands[1], DImode))"
   { return riscv_output_move (operands[0], operands[1]); }
-  [(set_attr "move_type" "move,const,load,store,mtc,fpload,mfc,fmove,fpstore")
+  [(set_attr "move_type" "rdvlenb,move,const,load,store,mtc,fpload,mfc,fmove,fpstore")
    (set_attr "mode" "DI")])
 
 (define_insn "*movdi_64bit"
-  [(set (match_operand:DI 0 "nonimmediate_operand" "=r,r,r, m,  *f,*f,*r,*f,*m")
-	(match_operand:DI 1 "move_operand"         " r,T,m,rJ,*r*J,*m,*f,*f,*f"))]
+  [(set (match_operand:DI 0 "nonimmediate_operand" "=r,r,r,r, m,  *f,*f,*r,*f,*m")
+	(match_operand:DI 1 "move_operand"         " vp,r,T,m,rJ,*r*J,*m,*f,*f,*f"))]
   "TARGET_64BIT
    && (register_operand (operands[0], DImode)
        || reg_or_0_operand (operands[1], DImode))"
   { return riscv_output_move (operands[0], operands[1]); }
-  [(set_attr "move_type" "move,const,load,store,mtc,fpload,mfc,fmove,fpstore")
+  [(set_attr "move_type" "rdvlenb,move,const,load,store,mtc,fpload,mfc,fmove,fpstore")
    (set_attr "mode" "DI")])
 
 ;; 32-bit Integer moves
@@ -1664,12 +1665,12 @@
 })
 
 (define_insn "*movsi_internal"
-  [(set (match_operand:SI 0 "nonimmediate_operand" "=r,r,r, m,  *f,*f,*r,*m")
-	(match_operand:SI 1 "move_operand"         " r,T,m,rJ,*r*J,*m,*f,*f"))]
+  [(set (match_operand:SI 0 "nonimmediate_operand" "=r,r,r,r, m,  *f,*f,*r,*m")
+	(match_operand:SI 1 "move_operand"         " vp,r,T,m,rJ,*r*J,*m,*f,*f"))]
   "(register_operand (operands[0], SImode)
     || reg_or_0_operand (operands[1], SImode))"
   { return riscv_output_move (operands[0], operands[1]); }
-  [(set_attr "move_type" "move,const,load,store,mtc,fpload,mfc,fpstore")
+  [(set_attr "move_type" "rdvlenb,move,const,load,store,mtc,fpload,mfc,fpstore")
    (set_attr "mode" "SI")])
 
 ;; 16-bit Integer moves
@@ -1689,12 +1690,12 @@
 })
 
 (define_insn "*movhi_internal"
-  [(set (match_operand:HI 0 "nonimmediate_operand" "=r,r,r, m,  *f,*r")
-	(match_operand:HI 1 "move_operand"	   " r,T,m,rJ,*r*J,*f"))]
+  [(set (match_operand:HI 0 "nonimmediate_operand" "=r,r,r,r, m,  *f,*r")
+	(match_operand:HI 1 "move_operand"	   " vp,r,T,m,rJ,*r*J,*f"))]
   "(register_operand (operands[0], HImode)
     || reg_or_0_operand (operands[1], HImode))"
   { return riscv_output_move (operands[0], operands[1]); }
-  [(set_attr "move_type" "move,const,load,store,mtc,mfc")
+  [(set_attr "move_type" "rdvlenb,move,const,load,store,mtc,mfc")
    (set_attr "mode" "HI")])
 
 ;; HImode constant generation; see riscv_move_integer for details.
@@ -1731,12 +1732,12 @@
 })
 
 (define_insn "*movqi_internal"
-  [(set (match_operand:QI 0 "nonimmediate_operand" "=r,r,r, m,  *f,*r")
-	(match_operand:QI 1 "move_operand"         " r,I,m,rJ,*r*J,*f"))]
+  [(set (match_operand:QI 0 "nonimmediate_operand" "=r,r,r,r, m,  *f,*r")
+	(match_operand:QI 1 "move_operand"         " vp,r,I,m,rJ,*r*J,*f"))]
   "(register_operand (operands[0], QImode)
     || reg_or_0_operand (operands[1], QImode))"
   { return riscv_output_move (operands[0], operands[1]); }
-  [(set_attr "move_type" "move,const,load,store,mtc,mfc")
+  [(set_attr "move_type" "rdvlenb,move,const,load,store,mtc,mfc")
    (set_attr "mode" "QI")])
 
 ;; 32-bit floating point moves

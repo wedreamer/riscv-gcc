@@ -1653,8 +1653,7 @@
        || reg_or_0_operand (operands[1], DImode))"
   { return riscv_output_move (operands[0], operands[1]); }
   [(set_attr "move_type" "move,const,load,store,mtc,fpload,mfc,fmove,fpstore,rdvlenb")
-   (set_attr "mode" "DI")
-   (set_attr "enabled" "yes")])
+   (set_attr "mode" "DI")])
 
 (define_insn "*movdi_64bit"
   [(set (match_operand:DI 0 "nonimmediate_operand" "=r,r,r, m,  *f,*f,*r,*f,*m,r")
@@ -1664,8 +1663,7 @@
        || reg_or_0_operand (operands[1], DImode))"
   { return riscv_output_move (operands[0], operands[1]); }
   [(set_attr "move_type" "move,const,load,store,mtc,fpload,mfc,fmove,fpstore,rdvlenb")
-   (set_attr "mode" "DI")
-   (set_attr "enabled" "yes")])
+   (set_attr "mode" "DI")])
 
 ;; 32-bit Integer moves
 
@@ -1685,8 +1683,7 @@
     || reg_or_0_operand (operands[1], SImode))"
   { return riscv_output_move (operands[0], operands[1]); }
   [(set_attr "move_type" "move,const,load,store,mtc,fpload,mfc,fpstore,rdvlenb")
-   (set_attr "mode" "SI")
-   (set_attr "enabled" "yes")])
+   (set_attr "mode" "SI")])
 
 ;; 16-bit Integer moves
 
@@ -1711,8 +1708,7 @@
     || reg_or_0_operand (operands[1], HImode))"
   { return riscv_output_move (operands[0], operands[1]); }
   [(set_attr "move_type" "move,const,load,store,mtc,mfc,rdvlenb")
-   (set_attr "mode" "HI")
-   (set_attr "enabled" "yes")])
+   (set_attr "mode" "HI")])
 
 ;; HImode constant generation; see riscv_move_integer for details.
 ;; si+si->hi without truncation is legal because of
@@ -1754,8 +1750,7 @@
     || reg_or_0_operand (operands[1], QImode))"
   { return riscv_output_move (operands[0], operands[1]); }
   [(set_attr "move_type" "move,const,load,store,mtc,mfc,rdvlenb")
-   (set_attr "mode" "QI")
-   (set_attr "enabled" "yes")])
+   (set_attr "mode" "QI")])
 
 ;; 32-bit floating point moves
 

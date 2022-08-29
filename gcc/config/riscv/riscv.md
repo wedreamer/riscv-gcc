@@ -166,18 +166,35 @@
 	 (const_string "yes")]
 	(const_string "no")))
 
+;; ISA attributes.
+(define_attr "ext" "base,f,d,vector"
+  (const_string "base"))
+
 ;; True if the extension is enabled.
 (define_attr "ext_enabled" "no,yes"
-  (cond [(match_test "TARGET_VECTOR")
-	 (const_string "yes")]
+  (cond [(eq_attr "ext" "base")
+	 (const_string "yes")
+	
+	 (and (eq_attr "ext" "f")
+	      (match_test "TARGET_HARD_FLOAT"))
+	 (const_string "yes")
+
+	 (and (eq_attr "ext" "d")
+	      (match_test "TARGET_DOUBLE_FLOAT"))
+	 (const_string "yes")
+
+	 (and (eq_attr "ext" "vector")
+	      (match_test "TARGET_VECTOR"))
+	 (const_string "yes")
+	]
 	(const_string "no")))
 
-;; Attribute to control enable or disable instructions. 
+;; Attribute to control enable or disable instructions.
 (define_attr "enabled" "no,yes"
   (cond [(eq_attr "ext_enabled" "no")
 	 (const_string "no")]
 	(const_string "yes")))
-   
+
 ;; Classification of each insn.
 ;; branch	conditional branch
 ;; jump		unconditional jump
@@ -1653,7 +1670,8 @@
        || reg_or_0_operand (operands[1], DImode))"
   { return riscv_output_move (operands[0], operands[1]); }
   [(set_attr "move_type" "move,const,load,store,mtc,fpload,mfc,fmove,fpstore,rdvlenb")
-   (set_attr "mode" "DI")])
+   (set_attr "mode" "DI")
+   (set_attr "ext" "base,base,base,base,d,d,d,d,d,vector")])
 
 (define_insn "*movdi_64bit"
   [(set (match_operand:DI 0 "nonimmediate_operand" "=r,r,r, m,  *f,*f,*r,*f,*m,r")
@@ -1663,7 +1681,8 @@
        || reg_or_0_operand (operands[1], DImode))"
   { return riscv_output_move (operands[0], operands[1]); }
   [(set_attr "move_type" "move,const,load,store,mtc,fpload,mfc,fmove,fpstore,rdvlenb")
-   (set_attr "mode" "DI")])
+   (set_attr "mode" "DI")
+   (set_attr "ext" "base,base,base,base,d,d,d,d,d,vector")])
 
 ;; 32-bit Integer moves
 
@@ -1683,7 +1702,8 @@
     || reg_or_0_operand (operands[1], SImode))"
   { return riscv_output_move (operands[0], operands[1]); }
   [(set_attr "move_type" "move,const,load,store,mtc,fpload,mfc,fpstore,rdvlenb")
-   (set_attr "mode" "SI")])
+   (set_attr "mode" "SI")
+   (set_attr "ext" "base,base,base,base,f,f,f,f,vector")])
 
 ;; 16-bit Integer moves
 
@@ -1708,7 +1728,8 @@
     || reg_or_0_operand (operands[1], HImode))"
   { return riscv_output_move (operands[0], operands[1]); }
   [(set_attr "move_type" "move,const,load,store,mtc,mfc,rdvlenb")
-   (set_attr "mode" "HI")])
+   (set_attr "mode" "HI")
+   (set_attr "ext" "base,base,base,base,f,f,vector")])
 
 ;; HImode constant generation; see riscv_move_integer for details.
 ;; si+si->hi without truncation is legal because of
@@ -1750,7 +1771,8 @@
     || reg_or_0_operand (operands[1], QImode))"
   { return riscv_output_move (operands[0], operands[1]); }
   [(set_attr "move_type" "move,const,load,store,mtc,mfc,rdvlenb")
-   (set_attr "mode" "QI")])
+   (set_attr "mode" "QI")
+   (set_attr "ext" "base,base,base,base,f,f,vector")])
 
 ;; 32-bit floating point moves
 

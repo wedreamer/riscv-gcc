@@ -5199,14 +5199,15 @@ riscv_init_machine_status (void)
 static poly_uint16
 riscv_convert_vector_bits (void)
 {
-  /* The runtime invariant is only meaningful when vector is enabled. */
-  if (!TARGET_VECTOR)
+  /* The runtime invariant is only meaningful when vector is enabled and minimum VLEN >= 32. */
+  if (!TARGET_VECTOR || TARGET_MIN_VLEN < 32)
     return 0;
 
-  if (TARGET_VECTOR_ELEN_64 || TARGET_VECTOR_ELEN_FP_64)
+  if (TARGET_MIN_VLEN > 32)
     {
-      /* When targetting Zve64* (ELEN = 64) extensions, we should use 64-bit
-	 chunk size. Runtime invariant: The single indeterminate represent the
+      /* When targetting minimum VLEN > 32, we should use 64-bit chunk size.
+         Otherwise we can not include sew = 64bits.
+	 Runtime invariant: The single indeterminate represent the
 	 number of 64-bit chunks in a vector beyond minimum length of 64 bits.
 	 Thus the number of bytes in a vector is 8 + 8 * x1 which is
 	 riscv_vector_chunks * 8 = poly_int (8, 8). */
@@ -5214,7 +5215,7 @@ riscv_convert_vector_bits (void)
     }
   else
     {
-      /* When targetting Zve32* (ELEN = 32) extensions, we should use 32-bit
+      /* When targetting minimum VLEN = 32, we should use 32-bit
 	 chunk size. Runtime invariant: The single indeterminate represent the
 	 number of 32-bit chunks in a vector beyond minimum length of 32 bits.
 	 Thus the number of bytes in a vector is 4 + 4 * x1 which is
